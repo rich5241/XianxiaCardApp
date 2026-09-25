@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修仙幻想典藏 - App Icon 設計產生器 (方案一)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+        }
+
+        body {
+            background-color: #0b0c10;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #f39c12;
+            background: linear-gradient(135deg, #FFE885 0%, #B8860B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: #8a8d93;
+            font-size: 0.95rem;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2.5rem;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(20, 22, 28, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            border-radius: 64px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.25);
+            background: #000;
+        }
+
+        #iconCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls-section {
+            flex: 1;
+            min-width: 320px;
+            max-width: 500px;
+            background: rgba(20, 22, 28, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            color: #d4af37;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #12141a;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: #ffe885;
+            box-shadow: 0 0 8px rgba(255, 232, 133, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.8rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 0.9rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FFE885 0%, #D4AF37 50%, #8A6D3B 100%);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #d4af37;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.15);
+            color: #fff;
+        }
+
+        .hint {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #7a7e85;
+            line-height: 1.5;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+        }
+
+        .preview-label {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #a0a5b0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>修仙幻想典藏 APP ICON 產生器</h1>
+        <p class="subtitle">方案一：【黑金仙俠徽章】高質感 512x512 導出工具</p>
+    </header>
+
+    <div class="container">
+        <!-- 預覽區 -->
+        <div class="preview-section">
+            <div class="canvas-wrapper">
+                <canvas id="iconCanvas" width="512" height="512"></canvas>
+            </div>
+            <p class="preview-label">512 x 512 像素高清 PNG 預覽</p>
+            <div class="btn-group" style="width: 100%;">
+                <button class="btn-primary" onclick="downloadIcon()">下載 favicon.png</button>
+            </div>
+        </div>
+
+        <!-- 控制調色面板 -->
+        <div class="controls-section">
+            <div class="control-group">
+                <label for="centerSymbol">核心修仙符號</label>
+                <select id="centerSymbol" onchange="drawIcon()">
+                    <option value="bagua_sword">太極陰陽 + 雙仙劍（推薦）</option>
+                    <option value="sword_only">凌霄仙劍 + 萬劍光芒</option>
+                    <option value="bagua_only">經典鎏金八卦陣</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="centerText">印章文字 (單字)</label>
+                <input type="text" id="centerText" value="仙" maxlength="1" oninput="drawIcon()">
+            </div>
+
+            <div class="control-group">
+                <label for="bgStyle">背景質感</label>
+                <select id="bgStyle" onchange="drawIcon()">
+                    <option value="dark_gold">玄黑金屬 + 流光金輝</option>
+                    <option value="deep_obsidian">深邃曜石黑 + 陣法光芒</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="accentColor">輝光色系</label>
+                <select id="accentColor" onchange="drawIcon()">
+                    <option value="gold">帝王尊爵金</option>
+                    <option value="amber">熾熱古金</option>
+                    <option value="cyan">仙幻蒼藍</option>
+                </select>
+            </div>
+
+            <div class="hint">
+                💡 <b>使用說明：</b><br>
+                1. 調整上方選項至您滿意的樣式。<br>
+                2. 點擊「<b>下載 favicon.png</b>」。<br>
+                3. 將下載好的圖片放入專案的 <code>web/favicon.png</code> 取代原本檔案即可！
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('iconCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawIcon() {
+            const symbol = document.getElementById('centerSymbol').value;
+            const text = document.getElementById('centerText').value || '仙';
+            const bgStyle = document.getElementById('bgStyle').value;
+            const accent = document.getElementById('accentColor').value;
+
+            // 清空畫布
+            ctx.clearRect(0, 0, 512, 512);
+
+            // 1. 繪製背景 (圓角底圖)
+            const bgGradient = ctx.createRadialGradient(256, 256, 30, 256, 256, 300);
+            if (bgStyle === 'dark_gold') {
+                bgGradient.addColorStop(0, '#1c1810');
+                bgGradient.addColorStop(0.6, '#0b0b0d');
+                bgGradient.addColorStop(1, '#050506');
+            } else {
+                bgGradient.addColorStop(0, '#15151c');
+                bgGradient.addColorStop(0.7, '#070709');
+                bgGradient.addColorStop(1, '#020203');
+            }
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, 512, 512);
+
+            // 背景暗紋/光輝
+            ctx.save();
+            ctx.translate(256, 256);
+            ctx.strokeStyle = accent === 'cyan' ? 'rgba(0, 220, 255, 0.05)' : 'rgba(212, 175, 55, 0.06)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 12; i++) {
+                ctx.rotate(Math.PI / 6);
+                ctx.beginPath();
+                ctx.arc(0, 0, 180, 0, Math.PI / 3);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // 2. 邊框繪製 (豪華黑金外框)
+            drawOuterBorder(accent);
+
+            // 3. 繪製核心圖案
+            if (symbol === 'bagua_sword') {
+                drawBaguaRing(accent);
+                drawSwords(accent);
+                drawCenterYinYang(accent);
+            } else if (symbol === 'sword_only') {
+                drawAuraRays(accent);
+                drawMainSword(accent);
+            } else if (symbol === 'bagua_only') {
+                drawBaguaRing(accent);
+                drawInnerBaguaLines(accent);
+            }
+
+            // 4. 繪製右下角尊爵印章文字
+            drawStamp(text, accent);
+        }
+
+        function drawOuterBorder(accent) {
+            ctx.save();
+            // 金屬外框雙線
+            const goldGrad = ctx.createLinearGradient(0, 0, 512, 512);
+            if (accent === 'cyan') {
+                goldGrad.addColorStop(0, '#80effe');
+                goldGrad.addColorStop(0.5, '#0083a9');
+                goldGrad.addColorStop(1, '#003648');
+            } else {
+                goldGrad.addColorStop(0, '#FFE885');
+                goldGrad.addColorStop(0.5, '#B8860B');
+                goldGrad.addColorStop(1, '#4A3300');
+            }
+
+            // 內框線
+            ctx.strokeStyle = goldGrad;
+            ctx.lineWidth = 6;
+            ctx.strokeRect(20, 20, 472, 472);
+
+            ctx.lineWidth = 2;
+            ctx.strokeRect(30, 30, 452, 452);
+
+            // 四角古典花角裝飾
+            const corners = [[20, 20], [492, 20], [20, 492], [492, 492]];
+            corners.forEach(([x, y]) => {
+                ctx.fillStyle = goldGrad;
+                ctx.beginPath();
+                ctx.arc(x, y, 12, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.restore();
+        }
+
+        function drawBaguaRing(accent) {
+            ctx.save();
+            ctx.translate(256, 256);
+
+            // 八卦圓環底圈
+            ctx.strokeStyle = accent === 'cyan' ? '#00b4d8' : '#D4AF37';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, 160, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 145, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 八卦符號線條 (簡化優雅版)
+            ctx.strokeStyle = accent === 'cyan' ? '#90e0ef' : '#FFE885';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 8; i++) {
+                ctx.rotate(Math.PI / 4);
+                // 爻線
+                ctx.beginPath();
+                ctx.moveTo(-15, -152);
+                ctx.lineTo(15, -152);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(-15, -148);
+                ctx.lineTo(-3, -148);
+                ctx.moveTo(3, -148);
+                ctx.lineTo(15, -148);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function drawCenterYinYang(accent) {
+            ctx.save();
+            ctx.translate(256, 256);
+
+            // 太極陰陽底盤
+            ctx.fillStyle = '#0a0a0c';
+            ctx.beginPath();
+            ctx.arc(0, 0, 60, 0, Math.PI * 2);
+            ctx.fill();
+
+            const goldColor = accent === 'cyan' ? '#80effe' : '#FFE885';
+            ctx.strokeStyle = goldColor;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // S 曲線
+            ctx.fillStyle = goldColor;
+            ctx.beginPath();
+            ctx.arc(0, 0, 60, -Math.PI / 2, Math.PI / 2, false);
+            ctx.arc(0, 30, 30, Math.PI / 2, -Math.PI / 2, false);
+            ctx.arc(0, -30, 30, Math.PI / 2, Math.PI * 1.5, true);
+            ctx.closePath();
+            ctx.fill();
+
+            // 兩眼
+            ctx.fillStyle = goldColor;
+            ctx.beginPath();
+            ctx.arc(0, 30, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#0a0a0c';
+            ctx.beginPath();
+            ctx.arc(0, -30, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawSwords(accent) {
+            ctx.save();
+            ctx.translate(256, 256);
+
+            const goldGrad = ctx.createLinearGradient(-100, -100, 100, 100);
+            if (accent === 'cyan') {
+                goldGrad.addColorStop(0, '#ffffff');
+                goldGrad.addColorStop(0.5, '#48cae4');
+                goldGrad.addColorStop(1, '#0077b6');
+            } else {
+                goldGrad.addColorStop(0, '#FFFFFF');
+                goldGrad.addColorStop(0.4, '#FFE885');
+                goldGrad.addColorStop(1, '#996515');
+            }
+
+            // 繪製交叉雙劍
+            [-45, 45].forEach(angle => {
+                ctx.save();
+                ctx.rotate((angle * Math.PI) / 180);
+
+                // 劍身
+                ctx.fillStyle = goldGrad;
+                ctx.beginPath();
+                ctx.moveTo(0, -190); // 劍尖
+                ctx.lineTo(8, -170);
+                ctx.lineTo(5, 120);
+                ctx.lineTo(-5, 120);
+                ctx.lineTo(-8, -170);
+                ctx.closePath();
+                ctx.fill();
+
+                // 劍格 (護手)
+                ctx.fillStyle = accent === 'cyan' ? '#0096c7' : '#B8860B';
+                ctx.fillRect(-22, 120, 44, 10);
+
+                ctx.restore();
+            });
+
+            ctx.restore();
+        }
+
+        function drawAuraRays(accent) {
+            ctx.save();
+            ctx.translate(256, 256);
+            ctx.strokeStyle = accent === 'cyan' ? 'rgba(72, 202, 228, 0.3)' : 'rgba(255, 232, 133, 0.25)';
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < 24; i++) {
+                ctx.rotate(Math.PI / 12);
+                ctx.beginPath();
+                ctx.moveTo(0, -80);
+                ctx.lineTo(0, -210);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawMainSword(accent) {
+            ctx.save();
+            ctx.translate(256, 240);
+
+            const goldGrad = ctx.createLinearGradient(0, -200, 0, 150);
+            goldGrad.addColorStop(0, '#FFFFFF');
+            goldGrad.addColorStop(0.3, '#FFE885');
+            goldGrad.addColorStop(1, '#8B6508');
+
+            // 主劍身
+            ctx.fillStyle = goldGrad;
+            ctx.beginPath();
+            ctx.moveTo(0, -210);
+            ctx.lineTo(12, -180);
+            ctx.lineTo(7, 130);
+            ctx.lineTo(-7, 130);
+            ctx.lineTo(-12, -180);
+            ctx.closePath();
+            ctx.fill();
+
+            // 劍脊光芒
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -200);
+            ctx.lineTo(0, 120);
+            ctx.stroke();
+
+            // 奢華護手
+            ctx.fillStyle = '#D4AF37';
+            ctx.beginPath();
+            ctx.moveTo(0, 120);
+            ctx.lineTo(35, 135);
+            ctx.lineTo(25, 150);
+            ctx.lineTo(0, 138);
+            ctx.lineTo(-25, 150);
+            ctx.lineTo(-35, 135);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawInnerBaguaLines(accent) {
+            ctx.save();
+            ctx.translate(256, 256);
+            ctx.strokeStyle = accent === 'cyan' ? '#80effe' : '#FFE885';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.arc(0, 0, 90, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 內圈裝飾刻度
+            for (let i = 0; i < 36; i++) {
+                ctx.rotate(Math.PI / 18);
+                ctx.beginPath();
+                ctx.moveTo(0, -90);
+                ctx.lineTo(0, -98);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawStamp(text, accent) {
+            ctx.save();
+            // 右下角黑金古風小印章
+            const x = 380;
+            const y = 380;
+            const size = 70;
+
+            // 印章背景
+            ctx.fillStyle = '#8B0000'; // 經典朱砂紅底印章
+            ctx.fillRect(x - size/2, y - size/2, size, size);
+
+            // 印章金框
+            ctx.strokeStyle = accent === 'cyan' ? '#80effe' : '#FFE885';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x - size/2 + 2, y - size/2 + 2, size - 4, size - 4);
+
+            // 印章文字
+            ctx.fillStyle = '#FFE885';
+            ctx.font = 'bold 42px "Kaiti SC", "STKaiti", "Microsoft JhengHei", serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y + 2);
+
+            ctx.restore();
+        }
+
+        function downloadIcon() {
+            const link = document.createElement('a');
+            link.download = 'favicon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // 初始化繪製
+        window.onload = drawIcon;
+    </script>
+</body>
+</html>
