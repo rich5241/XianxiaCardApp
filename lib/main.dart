@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
 import 'package:video_player/video_player.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const XianxiaCardApp());
@@ -18,8 +17,10 @@ class XianxiaCardApp extends StatelessWidget {
     return MaterialApp(
       title: '修仙幻想典藏',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
+      theme: ThemeData(
+        brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF07070A),
+        fontFamily: 'CustomFont', // 全域套用你的自訂字型
       ),
       home: const GalleryHomeScreen(),
     );
@@ -37,7 +38,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
   List<Map<String, String>> cards = [];
   bool isLoading = true;
 
-  // 新增：搜尋關鍵字狀態
   String searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -118,7 +118,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
     }
   }
 
-  // 檢查卡片是否有影片
   bool _hasVideo(Map<String, String> card) {
     final videoPath = getSmartAssetPath(card['video_url'], isVideo: true);
     return videoPath.isNotEmpty;
@@ -127,7 +126,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
   void _openFullScreenVideo(BuildContext context, Map<String, String> card) {
     final videoPath = getSmartAssetPath(card['video_url'], isVideo: true);
     if (videoPath.isEmpty) {
-      // 改為跟抽卡一樣的未更新提示
       _showUnreleasedDialog(context, card['name'] ?? '此角色');
       return;
     }
@@ -139,7 +137,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
     );
   }
 
-  // 顯示未更新提示對話框
   void _showUnreleasedDialog(BuildContext context, String characterName) {
     showDialog(
       context: context,
@@ -175,7 +172,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
     );
   }
 
-  // 抽卡互動彈窗（支援單抽與 10 連抽）
   void _showGachaDialog(BuildContext context, {bool isTenDraw = false}) {
     if (cards.isEmpty) return;
     final random = Random();
@@ -297,7 +293,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 根據搜尋關鍵字過濾角色
     final filteredCards = cards.where((card) {
       final name = card['name'] ?? '';
       final type = card['type'] ?? '';
@@ -334,7 +329,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
         centerTitle: true,
         backgroundColor: Colors.black,
         elevation: 0,
-        // 新增：右上角抽卡按鈕
         actions: [
           IconButton(
             icon: const Icon(Icons.card_giftcard, color: Color(0xFFFFE885)),
@@ -349,7 +343,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
               ? const Center(child: Text('未讀取到卡牌資料', style: TextStyle(color: Colors.white)))
               : Column(
                   children: [
-                    // 新增功能二：搜尋欄位
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: TextField(
@@ -388,8 +381,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                         ),
                       ),
                     ),
-                    
-                    // 角色圖鑑網格
                     Expanded(
                       child: filteredCards.isEmpty
                           ? const Center(child: Text('找不到符合的角色', style: TextStyle(color: Colors.white70)))
@@ -423,7 +414,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                                       borderRadius: BorderRadius.circular(8.5),
                                       child: Stack(
                                         children: [
-                                          // 封面圖
                                           Positioned.fill(
                                             child: Image.asset(
                                               imagePath,
@@ -437,8 +427,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                                               ),
                                             ),
                                           ),
-
-                                          // 底部遮罩
                                           Positioned(
                                             left: 0,
                                             right: 0,
@@ -457,8 +445,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                                               ),
                                             ),
                                           ),
-
-                                          // 稱號與整個橫幅覆蓋的名字花邊框
                                           Positioned(
                                             left: 0,
                                             right: 0,
@@ -481,8 +467,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                                                       style: const TextStyle(color: Color(0xFFFFE885), fontSize: 9.5),
                                                     ),
                                                   ),
-
-                                                // 全橫幅覆蓋花邊裝飾名牌
                                                 Container(
                                                   width: double.infinity,
                                                   padding: const EdgeInsets.symmetric(vertical: 5),
@@ -505,12 +489,10 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                                                   child: Stack(
                                                     alignment: Alignment.center,
                                                     children: [
-                                                      // 左側裝飾角
                                                       const Positioned(
                                                         left: 4,
                                                         child: Icon(Icons.diamond, size: 8, color: Color(0xFFFFE885)),
                                                       ),
-                                                      // 名字
                                                       Padding(
                                                         padding: const EdgeInsets.symmetric(horizontal: 16),
                                                         child: Text(
@@ -527,7 +509,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                                                           ),
                                                         ),
                                                       ),
-                                                      // 右側裝飾角
                                                       const Positioned(
                                                         right: 4,
                                                         child: Icon(Icons.diamond, size: 8, color: Color(0xFFFFE885)),
@@ -538,8 +519,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                                               ],
                                             ),
                                           ),
-
-                                          // 右上角播放圖示
                                           Positioned(
                                             right: 6,
                                             top: 6,
@@ -567,7 +546,6 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
   }
 }
 
-// 影片播放頁面 (支持聲音播放 + 自動優化 + 台詞位置與大小提升)
 class FullScreenVideoPage extends StatefulWidget {
   final Map<String, String> card;
   final String videoPath;
@@ -672,7 +650,6 @@ class _FullScreenVideoPageState extends State<FullScreenVideoPage> {
                                 child: VideoPlayer(_controller),
                               ),
                             ),
-
                             Positioned(
                               left: 0,
                               right: 0,
@@ -691,7 +668,6 @@ class _FullScreenVideoPageState extends State<FullScreenVideoPage> {
                                 ),
                               ),
                             ),
-
                             Positioned(
                               left: 20,
                               right: 20,
@@ -723,28 +699,24 @@ class _FullScreenVideoPageState extends State<FullScreenVideoPage> {
                                       ),
                                     ),
                                   ),
-
                                   if (description.isNotEmpty) ...[
                                     const SizedBox(height: 10),
                                     Text(
                                       '「$description」',
-                                      style: GoogleFonts.maShanZheng(
-                                        textStyle: const TextStyle(
-                                          color: Color(0xFFFFF4D6),
-                                          fontSize: 19,
-                                          height: 1.35,
-                                          shadows: [
-                                            Shadow(color: Colors.black, blurRadius: 8),
-                                            Shadow(color: Colors.black87, blurRadius: 4),
-                                          ],
-                                        ),
+                                      style: const TextStyle(
+                                        color: Color(0xFFFFF4D6),
+                                        fontSize: 19,
+                                        height: 1.35,
+                                        shadows: [
+                                          Shadow(color: Colors.black, blurRadius: 8),
+                                          Shadow(color: Colors.black87, blurRadius: 4),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ],
                               ),
                             ),
-
                             Positioned(
                               top: 12,
                               right: 12,
@@ -772,7 +744,6 @@ class _FullScreenVideoPageState extends State<FullScreenVideoPage> {
                       )
                     : const CircularProgressIndicator(color: Color(0xFFFFE885)),
           ),
-
           Positioned(
             top: 20,
             left: 20,

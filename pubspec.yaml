@@ -10,8 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   video_player: ^2.8.2
-  google_fonts: ^6.2.1
-  csv: ^6.0.0 # 新增 CSV 解析套件
+  csv: ^6.0.0 # CSV 解析套件
 
 dev_dependencies:
   flutter_test:
@@ -20,7 +19,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # 宣告自訂字型
+  fonts:
+    - family: CustomFont
+      fonts:
+        - asset: assets/fonts/Humour-Normal.ttf
+
   assets:
     - assets/data/cards_data.csv
-    - assets/Images/
+    - assets/images/
     - assets/Videos/
