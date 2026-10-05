@@ -723,24 +723,39 @@ class _GachaResultDialogState extends State<GachaResultDialog> with SingleTicker
             ),
           ),
           actions: [
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 4,
+            Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.refresh, color: Color(0xFFFFE885), size: 15),
-                  onPressed: widget.onRedrawSingle,
-                  label: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885), fontSize: 13)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.refresh, color: Color(0xFFFFE885), size: 16),
+                      onPressed: widget.onRedrawSingle,
+                      label: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885), fontSize: 13)),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.flash_on, color: Color(0xFFFFD700), size: 16),
+                      onPressed: widget.onRedrawTen,
+                      label: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                  ],
                 ),
-                TextButton.icon(
-                  icon: const Icon(Icons.flash_on, color: Color(0xFFFFD700), size: 15),
-                  onPressed: widget.onRedrawTen,
-                  label: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13)),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('收下典藏', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3D2E1E),
+                      side: const BorderSide(color: Color(0xFFFFE885), width: 1.2),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      '收下典藏',
+                      style: TextStyle(color: Color(0xFFFFE885), fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
                 ),
               ],
             ),
