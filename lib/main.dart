@@ -540,6 +540,7 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
 }
 
 // 需求三與四：帶有特效與強制上下各5個角色的十連抽展示元件
+// 需求三與四：帶有特效與強制上下各5個角色的十連抽展示元件 (RWD 自適應版本)
 class GachaResultDialog extends StatefulWidget {
   final List<Map<String, String>> drawnCards;
   final bool isTenDraw;
@@ -566,7 +567,6 @@ class _GachaResultDialogState extends State<GachaResultDialog> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // 華麗十連抽登場特效控制器 (縮放 + 金光閃爍)
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -638,11 +638,14 @@ class _GachaResultDialogState extends State<GachaResultDialog> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+
     return AnimatedBuilder(
       animation: _animController,
       builder: (context, child) {
         return AlertDialog(
           backgroundColor: const Color(0xFF120E0A),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
@@ -653,67 +656,91 @@ class _GachaResultDialogState extends State<GachaResultDialog> with SingleTicker
           title: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (widget.isTenDraw) const Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 24),
-              const SizedBox(width: 8),
-              Text(
-                widget.isTenDraw ? '✨ 十連絕美抽 (仙緣大吉) ✨' : '✨ 隨機單抽結果 ✨',
-                style: TextStyle(
-                  color: const Color(0xFFFFE885),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  shadows: [
-                    Shadow(
-                      color: const Color(0xFFFFD700),
-                      blurRadius: widget.isTenDraw ? _glowAnim.value : 3.0,
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(width: 8),
-              if (widget.isTenDraw) const Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 24),
-            ],
-          ),
-          content: SizedBox(
-            width: widget.isTenDraw ? 700 : 220,
-            child: widget.isTenDraw
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 上排 5 個角色
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: widget.drawnCards.sublist(0, 5).map((card) => _buildCardItem(context, card)).toList(),
-                      ),
-                      const SizedBox(height: 14),
-                      // 下排 5 個角色 (嚴格達成上下各5個)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: widget.drawnCards.sublist(5, 10).map((card) => _buildCardItem(context, card)).toList(),
+              if (widget.isTenDraw) const Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 20),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  widget.isTenDraw ? '✨ 十連絕美抽 (仙緣大吉) ✨' : '✨ 隨機單抽結果 ✨',
+                  style: TextStyle(
+                    color: const Color(0xFFFFE885),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    shadows: [
+                      Shadow(
+                        color: const Color(0xFFFFD700),
+                        blurRadius: widget.isTenDraw ? _glowAnim.value : 3.0,
                       ),
                     ],
-                  )
-                : Center(
-                    child: _buildCardItem(context, widget.drawnCards[0], isSingle: true),
                   ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 6),
+              if (widget.isTenDraw) const Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 20),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: screenSize.width * 0.9,
+              maxHeight: screenSize.height * 0.75,
+            ),
+            child: SingleChildScrollView(
+              child: widget.isTenDraw
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        // 根據可用寬度動算卡片大小，確保 5 張排一列不溢出
+                        double totalWidth = constraints.maxWidth;
+                        double cardWidth = ((totalWidth - (4 * 8)) / 5).clamp(45.0, 110.0);
+                        double cardHeight = cardWidth * 1.5;
+
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // 上排 5 個角色
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: widget.drawnCards
+                                  .sublist(0, 5)
+                                  .map((card) => _buildCardItem(context, card, cardWidth, cardHeight))
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 12),
+                            // 下排 5 個角色
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: widget.drawnCards
+                                  .sublist(5, 10)
+                                  .map((card) => _buildCardItem(context, card, cardWidth, cardHeight))
+                                  .toList(),
+                            ),
+                          ],
+                        );
+                      },
+                    )
+                  : Center(
+                      child: _buildCardItem(context, widget.drawnCards[0], 130.0, 195.0),
+                    ),
+            ),
           ),
           actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
                 TextButton.icon(
-                  icon: const Icon(Icons.refresh, color: Color(0xFFFFE885), size: 16),
+                  icon: const Icon(Icons.refresh, color: Color(0xFFFFE885), size: 15),
                   onPressed: widget.onRedrawSingle,
-                  label: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885))),
+                  label: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885), fontSize: 13)),
                 ),
                 TextButton.icon(
-                  icon: const Icon(Icons.flash_on, color: Color(0xFFFFD700), size: 16),
+                  icon: const Icon(Icons.flash_on, color: Color(0xFFFFD700), size: 15),
                   onPressed: widget.onRedrawTen,
-                  label: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
+                  label: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('收下典藏', style: TextStyle(color: Colors.grey)),
+                  child: const Text('收下典藏', style: TextStyle(color: Colors.grey, fontSize: 13)),
                 ),
               ],
             ),
@@ -723,95 +750,91 @@ class _GachaResultDialogState extends State<GachaResultDialog> with SingleTicker
     );
   }
 
-  Widget _buildCardItem(BuildContext context, Map<String, String> card, {bool isSingle = false}) {
+  Widget _buildCardItem(BuildContext context, Map<String, String> card, double width, double height) {
     final hasVid = _hasVideo(card);
-    final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
-    final width = isSingle ? 140.0 : 110.0;
-    final height = isSingle ? 210.0 : 165.0;
 
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
         _openCardVideo(context, card);
       },
-      child: Container(
+      child: SizedBox(
         width: width,
         height: height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: hasVid ? const Color(0xFFFFD700) : Colors.grey,
-            width: hasVid ? 2.0 : 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: hasVid ? const Color(0xFFFFD700).withOpacity(0.35) : Colors.black45,
-              blurRadius: 6,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: hasVid ? const Color(0xFFFFD700) : Colors.grey,
+              width: hasVid ? 1.5 : 1.0,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.5),
-          child: Stack(
-            fit: StackFit.expand,
-children: [
-  Builder(
-    builder: (context) {
-      // 先宣告並算出imgPath
-      final imgPath = AssetHelper.getSmartAssetPath(card['image_url'], isVideo: false);
-      
-      return Image.asset(
-        imgPath,
-        fit: BoxFit.cover,
-        errorBuilder: (_, error, stackTrace) => Container(
-          color: Colors.black54,
-          padding: const EdgeInsets.all(4),
-          child: Center(
-            child: Text(
-              '找不到: \n$imgPath',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.redAccent,
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  ),
- // 這裡確保是在 children: [ ... ] 裡面
-          if (!hasVid)
-            Container(
-              color: Colors.black.withOpacity(0.6),
-              child: const Center(
-                child: Text(
-                  '未更新',
-                  style: TextStyle(
-                    color: Colors.amberAccent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  color: Colors.black87,
-                  padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 2),
-                  child: Text(
-                    card['name'] ?? '',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Color(0xFFFFE885), fontSize: 11, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: hasVid ? const Color(0xFFFFD700).withOpacity(0.3) : Colors.black45,
+                blurRadius: 4,
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(7),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Builder(
+                  builder: (context) {
+                    final imgPath = AssetHelper.getSmartAssetPath(card['image_url'], isVideo: false);
+                    return Image.asset(
+                      imgPath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, error, stackTrace) => Container(
+                        color: Colors.black54,
+                        padding: const EdgeInsets.all(2),
+                        child: Center(
+                          child: Text(
+                            '找不到',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                if (!hasVid)
+                  Container(
+                    color: Colors.black.withOpacity(0.6),
+                    child: const Center(
+                      child: Text(
+                        '未更新',
+                        style: TextStyle(
+                          color: Colors.amberAccent,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    color: Colors.black87,
+                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 1),
+                    child: Text(
+                      card['name'] ?? '',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFFFE885), fontSize: 9, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
