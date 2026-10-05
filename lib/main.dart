@@ -54,25 +54,31 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
   }
 
   static String getSmartAssetPath(String? input, {required bool isVideo}) {
-  if (input == null || input.trim().isEmpty) return '';
-  
-  // 將 Windows 的反斜線轉為標準斜線，並去除空白與換行
-  String path = input.trim().replaceAll('\r', '').replaceAll('\\', '/');
+    if (input == null || input.trim().isEmpty) return '';
+    
+    // 清理字串，去除 Windows 反斜線與換行
+    String path = input.trim().replaceAll('\r', '').replaceAll('\\', '/');
 
-  if (path.startsWith('assets/')) return path;
-  if (path.startsWith('/assets/')) return path.substring(1);
-  if (path.startsWith('/')) path = path.substring(1);
+    // 移除開頭可能多餘的斜線，確保以 assets/ 開頭或相對路徑開始
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    }
 
-  if (path.startsWith('images/') || path.startsWith('video/')) {
-    return 'assets/$path';
+    if (path.startsWith('assets/')) {
+      return path;
+    }
+
+    if (path.startsWith('images/') || path.startsWith('video/')) {
+      return 'assets/$path';
+    }
+
+    final folder = isVideo ? 'video' : 'images';
+    // 確保檔名組合正確
+    final finalPath = 'assets/$folder/$path';
+    
+    print('DEBUG Asset Path: $finalPath'); 
+    return finalPath;
   }
-
-  final folder = isVideo ? 'video' : 'images';
-  final finalPath = 'assets/$folder/$path';
-  
-  print('DEBUG Asset Path: $finalPath'); // 用於在手機 Run 時看 Console
-  return finalPath;
-}
 
   Future<void> _loadCSVData() async {
     try {
