@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
 import 'package:video_player/video_player.dart';
+import 'asset_helper.dart';
 
 void main() {
   runApp(const XianxiaCardApp());
@@ -20,7 +21,7 @@ class XianxiaCardApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF07070A),
-        fontFamily: 'CustomFont', // 全域套用你的自訂字型
+        fontFamily: 'CustomFont',
       ),
       home: const GalleryHomeScreen(),
     );
@@ -44,7 +45,14 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCSVData();
+    _loadCSVData().then((_) {
+      // 需求一：登入/啟動完成後自動觸發一次十連抽
+      if (cards.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showGachaDialog(context, isTenDraw: true);
+        });
+      }
+    });
   }
 
   @override
@@ -53,40 +61,26 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
     super.dispose();
   }
 
-static String getSmartAssetPath(String? input, {required bool isVideo}) {
+  static String getSmartAssetPath(String? input, {required bool isVideo}) {
     if (input == null || input.trim().isEmpty) return '';
     
-    // 1. 清理 Windows 反斜線與換行
-    String path = input.trim().replaceAll('\r', '').replaceAll('\\', '/');
-
-    // 2. 移除開頭的斜線與開頭的 assets/
+    String path = input.trim().replaceAll('\\', '/').replaceAll('\r', '');
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
     if (path.startsWith('assets/')) {
       path = path.substring(7);
     }
+    path = path.replaceAll(RegExp(r'^(images/|Images/|video/|Video/|Videos/)+', caseSensitive: false), '');
 
-    // 3. 如果路徑開頭剛好是資料夾名稱（images/ 或 video/），把它們切掉，避免重複
     final folder = isVideo ? 'Videos' : 'images';
-    if (path.startsWith('$folder/')) {
-      path = path.substring(folder.length + 1);
-    }
-    // 兼容可能帶有大寫或其他資料夾名稱前綴的狀況
-    if (path.startsWith('images/') || path.startsWith('Images/') || path.startsWith('Videos/') || path.startsWith('Videos/') || path.startsWith('Videos/')) {
-      path = path.substring(path.indexOf('/') + 1);
-    }
-
-    // 4. 組出絕對標準、唯一的路徑（例如 assets/images/0001.png 或 assets/video/0002.mp4）
     final finalPath = 'assets/$folder/$path';
-    
-    print('DEBUG Asset Path: $finalPath'); 
     return finalPath;
   }
+
   Future<void> _loadCSVData() async {
     try {
       String rawData = '';
-
       try {
         rawData = await rootBundle.loadString('assets/data/cards_data.csv');
       } catch (e) {
@@ -186,7 +180,77 @@ static String getSmartAssetPath(String? input, {required bool isVideo}) {
     );
   }
 
-  void _showGachaDialog(BuildContext context, {bool isTenDraw = false}) {
+  // 需求二：點進抽卡介面（點擊禮品圖示）時不要自動抽獎，改為顯示抽卡大廳選單
+  void _showGachaLobby(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF120E0A),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFFFE885), width: 2),
+        ),
+        title: const Text(
+          '✨ 修仙招募大廳 ✨',
+          style: TextStyle(color: Color(0xFFFFE885), fontWeight: FontWeight.bold, letterSpacing: 2),
+            textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '請選擇您的招募方式，尋找有緣佳麗：',
+              style: TextStyle(color: Color(0xFFFFF4D6), fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3D2E1E),
+                    side: const BorderSide(color: Color(0xFFFFE885), width: 1.5),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  icon: const Icon(Icons.card_giftcard, color: Color(0xFFFFE885)),
+                  label: const Text('單抽一次', style: TextStyle(color: Color(0xFFFFE885), fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showGachaDialog(context, isTenDraw: false);
+                  },
+                ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5A4222),
+                    side: const BorderSide(color: Color(0xFFFFD700), width: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  icon: const Icon(Icons.auto_awesome, color: Color(0xFFFFD700)),
+                  label: const Text('十連絕美抽', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showGachaDialog(context, isTenDraw: true);
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('返回典藏', style: TextStyle(color: Colors.grey)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 需求三與需求四：十連抽展示改為上下各五個角色，並增加華麗金光特效
+  void _showGachaDialog(BuildContext context, {required bool isTenDraw}) {
     if (cards.isEmpty) return;
     final random = Random();
     List<Map<String, String>> drawnCards = [];
@@ -199,122 +263,18 @@ static String getSmartAssetPath(String? input, {required bool isVideo}) {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF120E0A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFFFE885), width: 2),
-        ),
-        title: Text(
-          isTenDraw ? '✨ 十連抽結果 ✨' : '✨ 隨機抽卡 ✨',
-          style: const TextStyle(color: Color(0xFFFFE885), fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              alignment: WrapAlignment.center,
-              children: drawnCards.map((card) {
-                final hasVid = _hasVideo(card);
-                final imgPath = getSmartAssetPath(card['image_url'], isVideo: false);
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openFullScreenVideo(context, card);
-                  },
-                  child: Container(
-                    width: isTenDraw ? 80 : 120,
-                    height: isTenDraw ? 120 : 180,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: hasVid ? const Color(0xFFFFE885) : Colors.grey, width: 1.5),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6.5),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.asset(
-  imgPath,
-  fit: BoxFit.cover,
-  errorBuilder: (_, error, stackTrace) => Container(
-    color: Colors.black54,
-    padding: const EdgeInsets.all(4),
-    child: Center(
-      child: Text(
-        '找不到:\n$imgPath',
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.redAccent, 
-          fontSize: 9, 
-          fontWeight: FontWeight.bold
-        ),
-      ),
-    ),
-  ),
-),
-if (!hasVid)
-  Container(
-    color: Colors.black.withOpacity(0.6),
-    child: const Center(
-      child: Text(
-        '未更新',
-        style: TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold),
-      ),
-    ),
-  ),
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              color: Colors.black87,
-                              padding: const EdgeInsets.symmetric(vertical: 2),
-                              child: Text(
-                                card['name'] ?? '',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Color(0xFFFFE885), fontSize: 10),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showGachaDialog(context, isTenDraw: false);
-                },
-                child: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885))),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showGachaDialog(context, isTenDraw: true);
-                },
-                child: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFE885))),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('關閉', style: TextStyle(color: Colors.grey)),
-              ),
-            ],
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (context) => GachaResultDialog(
+        drawnCards: drawnCards,
+        isTenDraw: isTenDraw,
+        onRedrawSingle: () {
+          Navigator.pop(context);
+          _showGachaDialog(context, isTenDraw: false);
+        },
+        onRedrawTen: () {
+          Navigator.pop(context);
+          _showGachaDialog(context, isTenDraw: true);
+        },
       ),
     );
   }
@@ -360,8 +320,8 @@ if (!hasVid)
         actions: [
           IconButton(
             icon: const Icon(Icons.card_giftcard, color: Color(0xFFFFE885)),
-            tooltip: '隨機抽卡',
-            onPressed: () => _showGachaDialog(context, isTenDraw: false),
+            tooltip: '招募大廳',
+            onPressed: () => _showGachaLobby(context), // 點擊改為打開大廳選單，不直接自動抽獎
           ),
         ],
       ),
@@ -423,7 +383,7 @@ if (!hasVid)
                               itemCount: filteredCards.length,
                               itemBuilder: (context, index) {
                                 final card = filteredCards[index];
-                                final imagePath = getSmartAssetPath(card['image_url'], isVideo: false);
+                                final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
 
                                 return GestureDetector(
                                   onTap: () => _openFullScreenVideo(context, card),
@@ -443,18 +403,23 @@ if (!hasVid)
                                       child: Stack(
                                         children: [
                                           Positioned.fill(
-                                            child: Image.asset(
-                                              imagePath,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Container(
-                                                color: Colors.black54,
-                                                padding: const EdgeInsets.all(8),
-                                                child: const Center(
-                                                  child: Icon(Icons.image_not_supported, color: Colors.amber, size: 32),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+        child: Builder(
+          builder: (context) {
+            final imagePath = AssetHelper.getSmartAssetPath(card['image_url'], isVideo: false);
+            return Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: Colors.black54,
+                padding: const EdgeInsets.all(8),
+                child: const Center(
+                  child: Icon(Icons.image_not_supported, color: Colors.amber, size: 32),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
                                           Positioned(
                                             left: 0,
                                             right: 0,
@@ -548,17 +513,17 @@ if (!hasVid)
                                             ),
                                           ),
                                           Positioned(
-                                            right: 6,
-                                            top: 6,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(3),
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withOpacity(0.6),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(color: const Color(0xFFFFE885), width: 1),
-                                              ),
-                                              child: const Icon(Icons.play_arrow_rounded, color: Color(0xFFFFE885), size: 16),
-                                            ),
+                                           right: 6,
+                                           top: 6,
+                                           child: Container(
+                                             padding: const EdgeInsets.all(3),
+                                             decoration: BoxDecoration(
+                                               color: Colors.black.withOpacity(0.6),
+                                               shape: BoxShape.circle,
+                                               border: Border.all(color: const Color(0xFFFFE885), width: 1),
+                                             ),
+                                             child: const Icon(Icons.play_arrow_rounded, color: Color(0xFFFFE885), size: 16),
+                                           ),
                                           ),
                                         ],
                                       ),
@@ -570,6 +535,286 @@ if (!hasVid)
                     ),
                   ],
                 ),
+    );
+  }
+}
+
+// 需求三與四：帶有特效與強制上下各5個角色的十連抽展示元件
+class GachaResultDialog extends StatefulWidget {
+  final List<Map<String, String>> drawnCards;
+  final bool isTenDraw;
+  final VoidCallback onRedrawSingle;
+  final VoidCallback onRedrawTen;
+
+  const GachaResultDialog({
+    super.key,
+    required this.drawnCards,
+    required this.isTenDraw,
+    required this.onRedrawSingle,
+    required this.onRedrawTen,
+  });
+
+  @override
+  State<GachaResultDialog> createState() => _GachaResultDialogState();
+}
+
+class _GachaResultDialogState extends State<GachaResultDialog> with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _glowAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    // 華麗十連抽登場特效控制器 (縮放 + 金光閃爍)
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    _scaleAnim = Tween<double>(begin: 0.95, end: 1.02).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    );
+    _glowAnim = Tween<double>(begin: 2.0, end: 8.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  bool _hasVideo(Map<String, String> card) {
+    final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
+    return videoPath.isNotEmpty;
+  }
+
+  void _openCardVideo(BuildContext context, Map<String, String> card) {
+    final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
+    if (videoPath.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1F1710),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFFFFE885), width: 1.5),
+          ),
+          title: Text(
+            card['name'] ?? '此角色',
+            style: const TextStyle(color: Color(0xFFFFE885), fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: const Text(
+            '這個角色目前尚無影片，正在趕工製作中！',
+            style: TextStyle(color: Color(0xFFFFF4D6)),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3D2E1E),
+                  side: const BorderSide(color: Color(0xFFFFE885)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('確定', style: TextStyle(color: Color(0xFFFFE885))),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FullScreenVideoPage(card: card, videoPath: videoPath),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, child) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF120E0A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: widget.isTenDraw ? const Color(0xFFFFD700) : const Color(0xFFFFE885),
+              width: widget.isTenDraw ? 2.5 : 1.5,
+            ),
+          ),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (widget.isTenDraw) const Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 24),
+              const SizedBox(width: 8),
+              Text(
+                widget.isTenDraw ? '✨ 十連絕美抽 (仙緣大吉) ✨' : '✨ 隨機單抽結果 ✨',
+                style: TextStyle(
+                  color: const Color(0xFFFFE885),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  shadows: [
+                    Shadow(
+                      color: const Color(0xFFFFD700),
+                      blurRadius: widget.isTenDraw ? _glowAnim.value : 3.0,
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(width: 8),
+              if (widget.isTenDraw) const Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 24),
+            ],
+          ),
+          content: SizedBox(
+            width: widget.isTenDraw ? 700 : 220,
+            child: widget.isTenDraw
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 上排 5 個角色
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: widget.drawnCards.sublist(0, 5).map((card) => _buildCardItem(context, card)).toList(),
+                      ),
+                      const SizedBox(height: 14),
+                      // 下排 5 個角色 (嚴格達成上下各5個)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: widget.drawnCards.sublist(5, 10).map((card) => _buildCardItem(context, card)).toList(),
+                      ),
+                    ],
+                  )
+                : Center(
+                    child: _buildCardItem(context, widget.drawnCards[0], isSingle: true),
+                  ),
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  icon: const Icon(Icons.refresh, color: Color(0xFFFFE885), size: 16),
+                  onPressed: widget.onRedrawSingle,
+                  label: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885))),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.flash_on, color: Color(0xFFFFD700), size: 16),
+                  onPressed: widget.onRedrawTen,
+                  label: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('收下典藏', style: TextStyle(color: Colors.grey)),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCardItem(BuildContext context, Map<String, String> card, {bool isSingle = false}) {
+    final hasVid = _hasVideo(card);
+    final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
+    final width = isSingle ? 140.0 : 110.0;
+    final height = isSingle ? 210.0 : 165.0;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        _openCardVideo(context, card);
+      },
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: hasVid ? const Color(0xFFFFD700) : Colors.grey,
+            width: hasVid ? 2.0 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: hasVid ? const Color(0xFFFFD700).withOpacity(0.35) : Colors.black45,
+              blurRadius: 6,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8.5),
+          child: Stack(
+            fit: StackFit.expand,
+children: [
+  Builder(
+    builder: (context) {
+      // 先宣告並算出imgPath
+      final imgPath = AssetHelper.getSmartAssetPath(card['image_url'], isVideo: false);
+      
+      return Image.asset(
+        imgPath,
+        fit: BoxFit.cover,
+        errorBuilder: (_, error, stackTrace) => Container(
+          color: Colors.black54,
+          padding: const EdgeInsets.all(4),
+          child: Center(
+            child: Text(
+              '找不到: \n$imgPath',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  ),
+ // 這裡確保是在 children: [ ... ] 裡面
+          if (!hasVid)
+            Container(
+              color: Colors.black.withOpacity(0.6),
+              child: const Center(
+                child: Text(
+                  '未更新',
+                  style: TextStyle(
+                    color: Colors.amberAccent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: Colors.black87,
+                  padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 2),
+                  child: Text(
+                    card['name'] ?? '',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFFFFE885), fontSize: 11, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
