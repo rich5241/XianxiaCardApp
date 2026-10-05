@@ -126,8 +126,8 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
     }
   }
 
-  bool _hasVideo(Map<String, String> card) {
-    final videoPath = getSmartAssetPath(card['video_url'], isVideo: true);
+  bool hasVid(Map<String, String> card) {
+    final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
     return videoPath.isNotEmpty;
   }
 
@@ -383,8 +383,8 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                               itemCount: filteredCards.length,
                               itemBuilder: (context, index) {
                                 final card = filteredCards[index];
-                                final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
-
+            final videoPath = AssetHelper.getSmartAssetPath(card['video_url'], isVideo: true);
+            final hasVid = videoPath.isNotEmpty; // 確保這行有保留
                                 return GestureDetector(
                                   onTap: () => _openFullScreenVideo(context, card),
                                   child: Container(
