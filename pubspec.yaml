@@ -28,4 +28,4 @@ flutter:
   assets:
     - assets/data/cards_data.csv
     - assets/images/
-    - assets/videos/
+    - assets/Videos/
