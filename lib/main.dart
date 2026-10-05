@@ -229,20 +229,34 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
                         fit: StackFit.expand,
                         children: [
                           Image.asset(
-                            imgPath,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(color: Colors.black54),
-                          ),
-                          if (!hasVid)
-                            Container(
-                              color: Colors.black.withOpacity(0.6),
-                              child: const Center(
-                                child: Text(
-                                  '未更新',
-                                  style: TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
+  imgPath,
+  fit: BoxFit.cover,
+  errorBuilder: (_, error, stackTrace) => Container(
+    color: Colors.black54,
+    padding: const EdgeInsets.all(4),
+    child: Center(
+      child: Text(
+        '找不到:\n$imgPath',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.redAccent, 
+          fontSize: 9, 
+          fontWeight: FontWeight.bold
+        ),
+      ),
+    ),
+  ),
+),
+if (!hasVid)
+  Container(
+    color: Colors.black.withOpacity(0.6),
+    child: const Center(
+      child: Text(
+        '未更新',
+        style: TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+    ),
+  ),
                           Positioned(
                             bottom: 0,
                             left: 0,
