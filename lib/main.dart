@@ -56,18 +56,17 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
 static String getSmartAssetPath(String? input, {required bool isVideo}) {
     if (input == null || input.trim().isEmpty) return '';
     
-    // 清理字串，去除 Windows 反斜線與換行
     String path = input.trim().replaceAll('\r', '').replaceAll('\\', '/');
 
-    // 移除開頭多餘的斜線
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
 
-    // 【防呆修正】不管前面帶有幾層 assets/ 或大小寫的 Images/，全部自動拔除統一規範
+    // 【防呆修正】自動拔除所有重複的 assets/、video/、Video/、Videos/ 等前綴
     path = path.replaceAll(RegExp(r'^(assets/)+', caseSensitive: false), '');
-    path = path.replaceAll(RegExp(r'^(images/|Images/)+', caseSensitive: false), '');
+    path = path.replaceAll(RegExp(r'^(video/|Video/|Videos/)+', caseSensitive: false), '');
 
+    // 統一使用全小寫的資料夾名稱
     final folder = isVideo ? 'video' : 'images';
     final finalPath = 'assets/$folder/$path';
     
