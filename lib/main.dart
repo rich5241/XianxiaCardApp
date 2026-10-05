@@ -56,21 +56,28 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
 static String getSmartAssetPath(String? input, {required bool isVideo}) {
     if (input == null || input.trim().isEmpty) return '';
     
-    // 僅做基本的反斜線清理
+    // 1. 清理 Windows 反斜線與換行
     String path = input.trim().replaceAll('\r', '').replaceAll('\\', '/');
 
-    // 如果本身已經帶有 assets/ 開頭，直接回傳
-    if (path.startsWith('assets/')) {
-      return path;
-    }
-
-    // 移除開頭可能多餘的斜線
+    // 2. 移除開頭的斜線與開頭的 assets/
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
+    if (path.startsWith('assets/')) {
+      path = path.substring(7);
+    }
 
-    // 依照類型直接對應資料夾
+    // 3. 如果路徑開頭剛好是資料夾名稱（images/ 或 video/），把它們切掉，避免重複
     final folder = isVideo ? 'video' : 'images';
+    if (path.startsWith('$folder/')) {
+      path = path.substring(folder.length + 1);
+    }
+    // 兼容可能帶有大寫或其他資料夾名稱前綴的狀況
+    if (path.startsWith('images/') || path.startsWith('Images/') || path.startsWith('video/') || path.startsWith('Video/') || path.startsWith('Videos/')) {
+      path = path.substring(path.indexOf('/') + 1);
+    }
+
+    // 4. 組出絕對標準、唯一的路徑（例如 assets/images/0001.png 或 assets/video/0002.mp4）
     final finalPath = 'assets/$folder/$path';
     
     print('DEBUG Asset Path: $finalPath'); 
