@@ -68,7 +68,7 @@ static String getSmartAssetPath(String? input, {required bool isVideo}) {
     }
 
     // 3. 如果路徑開頭剛好是資料夾名稱（images/ 或 video/），把它們切掉，避免重複
-    final folder = isVideo ? 'video' : 'images';
+    final folder = isVideo ? 'videos' : 'images';
     if (path.startsWith('$folder/')) {
       path = path.substring(folder.length + 1);
     }
