@@ -56,24 +56,24 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
 static String getSmartAssetPath(String? input, {required bool isVideo}) {
     if (input == null || input.trim().isEmpty) return '';
     
+    // 清理字串，去除反斜線與換行
     String path = input.trim().replaceAll('\r', '').replaceAll('\\', '/');
 
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
 
-    // 【防呆修正】自動拔除所有重複的 assets/、video/、Video/、Videos/ 等前綴
+    // 1. 先把舊的、重複的、大小寫錯誤的前綴全部拔乾淨
     path = path.replaceAll(RegExp(r'^(assets/)+', caseSensitive: false), '');
-    path = path.replaceAll(RegExp(r'^(video/|Video/|Videos/)+', caseSensitive: false), '');
+    path = path.replaceAll(RegExp(r'^(images/|Images/|video/|Video/|Videos/)+', caseSensitive: false), '');
 
-    // 統一使用全小寫的資料夾名稱
+    // 2. 嚴格依照 isVideo 決定正確且全小寫的資料夾：images 或是 video
     final folder = isVideo ? 'video' : 'images';
     final finalPath = 'assets/$folder/$path';
     
     print('DEBUG Asset Path: $finalPath'); 
     return finalPath;
   }
-
   Future<void> _loadCSVData() async {
     try {
       String rawData = '';
