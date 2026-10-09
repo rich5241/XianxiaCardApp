@@ -727,28 +727,38 @@ class _GachaResultDialogState extends State<GachaResultDialog> with SingleTicker
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    TextButton.icon(
-                      icon: const Icon(Icons.refresh, color: Color(0xFFFFE885), size: 16),
-                      onPressed: widget.onRedrawSingle,
-                      label: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885), fontSize: 13)),
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.refresh, color: Color(0xFFFFE885), size: 15),
+                          onPressed: widget.onRedrawSingle,
+                          label: const Text('再抽一次', style: TextStyle(color: Color(0xFFFFE885), fontSize: 13)),
+                        ),
+                      ),
                     ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.flash_on, color: Color(0xFFFFD700), size: 16),
-                      onPressed: widget.onRedrawTen,
-                      label: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13)),
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.flash_on, color: Color(0xFFFFD700), size: 15),
+                          onPressed: widget.onRedrawTen,
+                          label: const Text('再抽十連', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13)),
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
                 SizedBox(
                   width: double.infinity,
+                  height: 42,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3D2E1E),
                       side: const BorderSide(color: Color(0xFFFFE885), width: 1.2),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: EdgeInsets.zero,
                     ),
                     onPressed: () => Navigator.pop(context),
                     child: const Text(
