@@ -5,8 +5,27 @@ import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
 import 'package:video_player/video_player.dart';
 import 'asset_helper.dart';
+import 'notification_service.dart';
 
-void main() {
+// 1. 加在第 9 行（main 上方）
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService().initNotification(
+    onSelectNotification: (String? payload) {
+      if (payload != null && payload.isNotEmpty) {
+        debugPrint('點擊通知，目標角色: $payload');
+        // 透過全域 key 導向至該角色的影片頁面
+        navigatorKey.currentState?.pushNamed(
+          '/character_detail', 
+          arguments: payload, // 傳入角色名字
+        );
+      }
+    },
+  );
+
   runApp(const XianxiaCardApp());
 }
 
@@ -16,11 +35,12 @@ class XianxiaCardApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '修仙幻想典藏',
+      navigatorKey: navigatorKey, // 2. 在這裡加上這行綁定
+      title: '修仙幻想共震',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF07070A),
+        scaffoldBackgroundColor: const Color(0xFFF07070A),
         fontFamily: 'CustomFont',
       ),
       home: const GalleryHomeScreen(),
@@ -46,15 +66,53 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
   void initState() {
     super.initState();
     _loadCSVData().then((_) {
-      // 需求一：登入/啟動完成後自動觸發一次十連抽
-      if (cards.isNotEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showGachaDialog(context, isTenDraw: true);
-        });
-      }
+      // 資料載入完成後，檢查是否是經由通知點擊進來的
+      _checkNotificationLaunch();
     });
   }
 
+  // 檢查通知 payload 並自動跳轉影片
+  void _checkNotificationLaunch() {
+    String? targetCharacterName = NotificationService.pendingPayload; 
+    
+    if (targetCharacterName != null && targetCharacterName.isNotEmpty) {
+      // 清空 payload 避免重複觸發
+      NotificationService.pendingPayload = null;
+      
+      // 從 cards 裡面找到對應名字的角色
+      try {
+        final targetCard = cards.firstWhere(
+          (card) => card['name'] == targetCharacterName,
+        );
+        
+        // 取得影片路徑（這裡對應你原本讀取 CSV 的欄位，通常是 videoPath 或類似的 key）
+        final videoPath = targetCard['videoPath'] ?? ''; 
+        
+        if (videoPath.isNotEmpty) {
+          // 直接導向影片頁面，並「跳過」10連抽
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FullScreenVideoPage(
+                card: targetCard,
+                videoPath: videoPath,
+              ),
+            ),
+          );
+          return; // 成功從通知進入，直接結束，不觸發十連抽
+        }
+      } catch (e) {
+        debugPrint('找不到對應角色的資料: $targetCharacterName');
+      }
+    }
+    
+    // 如果「不是」從通知進來的，才正常觸發你的 10 連抽！
+    if (cards.isNotEmpty) {
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showGachaDialog(context, isTenDraw: true);
+      });
+    }
+  }
   @override
   void dispose() {
     _searchController.dispose();
@@ -291,23 +349,43 @@ class _GalleryHomeScreenState extends State<GalleryHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
+        // 在這裡加入左上角按鈕
+        leading: IconButton(
+          icon: const Icon(Icons.notifications_active, color: Colors.amber),
+          tooltip: '測試隨機推播',
+          onPressed: () async {
+            // 這裡直接讀取你畫面現有的 cards 變數（確保按鈕能隨機抽你畫面上真實存在的角色）
+            if (cards.isNotEmpty) {
+              await NotificationService().triggerRandomCharacterReminder(cards, '晚餐');
+            } else {
+              // 如果清單還沒載入完，用預設測試名單
+              List<Map<String, String>> mockCards = [
+                {'name': '小雲'},
+                {'name': '馮提莫'},
+                {'name': '林襄'},
+                {'name': '口水格格'},
+              ];
+              await NotificationService().triggerRandomCharacterReminder(mockCards, '晚餐');
+            }
+          },
+        ),
         title: Column(
           children: [
             Text(
-              cards.isNotEmpty ? '後 宮 佳 麗 (${cards.length})' : '後 宮 佳 麗',
+              cards.isNotEmpty ? '後宮佳麗 (${cards.length})' : '後宮佳麗',
               style: const TextStyle(
-                color: Color(0xFFFFE885),
+                color: Color(0xFFFFFFF85),
                 fontWeight: FontWeight.bold,
                 letterSpacing: 3,
                 fontSize: 20,
-                shadows: [Shadow(color: Color(0xFFD4AF37), blurRadius: 10)],
+                shadows: [Shadow(color: Color(0xFFFD4AF37), blurRadius: 10)],
               ),
             ),
             const SizedBox(height: 2),
             const Text(
               '修仙幻想典藏',
               style: TextStyle(
-                color: Color(0xFFB5A478),
+                color: Color(0xFFFFB5A478),
                 fontSize: 11,
                 letterSpacing: 2,
               ),

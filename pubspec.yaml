@@ -11,7 +11,9 @@ dependencies:
     sdk: flutter
   video_player: ^2.8.2
   csv: ^6.0.0 # CSV 解析套件
-  google_fonts: ^6.1.0  
+  google_fonts: ^6.1.0
+  flutter_local_notifications: ^17.0.0
+  http: ^1.2.0 # 用於呼叫 GPT API 
 
 dev_dependencies:
   flutter_test:
